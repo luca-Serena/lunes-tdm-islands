@@ -1,4 +1,0 @@
- #!/bin/bash
-        for i in test*; do
-            cat $i | tail -n1 | cut -d " " -f3
-        done
