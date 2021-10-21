@@ -129,7 +129,7 @@ void lunes_user_control_handler(hash_node_t *node) {
     //*************************************************** INITIAL SETUP***********************************************************************************************//
     if (simclock == BUILDING_STEP) {                     //positioning the nodes in the graph
         node->data->messages_carried = 0;
-        if (node->data->key < env_data_mules){          //BUS-MULES
+        if (node->data->key < env_data_mules){          //local muleS
             node->data->Xspace = node->data->key / per_row;
             node->data->Yspace = node->data->key % per_row;
             node->data->direction =0;
@@ -213,8 +213,8 @@ void lunes_user_control_handler(hash_node_t *node) {
             if (node->data->status == 1){                                           //deliver messages if any
                 node->data->messages[0]->delivered = (int)simclock;
                 node->data->messages[0]->state = 'I';
-                node->data->messages[0]->toBusMule = -1;
-                node->data->messages[0]->toProxyMule = -1;
+                node->data->messages[0]->toLocalMule = -1;
+                node->data->messages[0]->toRadialMule = -1;
                 node->data->status = 0;
                 total_hops++;
             }
@@ -230,10 +230,10 @@ void lunes_user_control_handler(hash_node_t *node) {
                         receiver->data->messages[index] = node->data->messages[0];
                         receiver->data->messages_carried++;
                         if (h < env_data_mules){
-                            node->data->messages[0]->toBusMule = (int)simclock;
+                            node->data->messages[0]->toLocalMule = (int)simclock;
                         } else {
-                             node->data->messages[0]->toBusMule = -1;                           
-                             node->data->messages[0]->toProxyMule = (int)simclock; 
+                             node->data->messages[0]->toLocalMule = -1;                           
+                             node->data->messages[0]->toRadialMule = (int)simclock; 
                         }
                     } 
                     break;
@@ -264,9 +264,9 @@ void lunes_user_control_handler(hash_node_t *node) {
 
 //  ********************************************** MULES MOBILITY ******************************************************************************
 
-    //moving bus-mule depending on its position
+    //moving local mule depending on its position
     if (simclock > BUILDING_STEP && node->data->status == 2){ 
-        //move the bus-mule
+        //move the local mule
         switch (node->data->direction){
             case 0: //go east, then north
                 if (node->data->x < (node->data->Xspace + 0.5) * (env_grid_length / per_row)){//} - env_commmunication_distance){  
@@ -372,20 +372,20 @@ void lunes_user_control_handler(hash_node_t *node) {
         if (distance( abs(node->data->x - proxy->data->x), abs(node->data->y - proxy->data->y)) <= env_commmunication_distance){
             for (int i=0; i< node->data->messages_carried; i++) {                                     //all messages from the data-mule delivered to the proxy mule
                 node->data->messages[i]->delivered = (int)simclock;
-                node->data->messages[i]->toProxyMule = -1;
+                node->data->messages[i]->toRadialMule = -1;
                 node->data->messages[i]->state = 'B';
                 total_hops++;
             }   
             node->data->messages_carried = 0;
         }
         
-        // check if the proxy-mule has to be activated
+        // check if the radial mule has to be activated
         hash_node_t * correspondingMule = hash_lookup (table, node->data->key + env_data_mules);
         if (distance (abs(node->data->x - correspondingMule->data->x), abs(node->data->y - correspondingMule->data->y)) <= env_commmunication_distance && correspondingMule->data->direction < 2){  
-            for (int i=0; i< node->data->messages_carried; i++) {                                     //all messages from the local bus-mule delivered to the proxy mule
-                int proxyMuleIndex = i + correspondingMule->data->messages_carried;
-                correspondingMule->data->messages[proxyMuleIndex] = node->data->messages[i];  
-                correspondingMule->data->messages[proxyMuleIndex]->toProxyMule = (int)simclock;
+            for (int i=0; i< node->data->messages_carried; i++) {                                     //all messages from the local local mule delivered to the proxy mule
+                int RadialMuleIndex = i + correspondingMule->data->messages_carried;
+                correspondingMule->data->messages[RadialMuleIndex] = node->data->messages[i];  
+                correspondingMule->data->messages[RadialMuleIndex]->toRadialMule = (int)simclock;
                 total_hops++;
             }   
             correspondingMule->data->messages_carried += node->data->messages_carried;
@@ -398,7 +398,7 @@ void lunes_user_control_handler(hash_node_t *node) {
 
 //*********************************************PROXY_MULE****************************************************************************************************************
 
-    } else if (simclock > BUILDING_STEP && node->data->status == 3){         //mobility for mules that bring messages to the proxy  (proxy-mule)
+    } else if (simclock > BUILDING_STEP && node->data->status == 3){         //mobility for mules that bring messages to the proxy  (radial mule)
         if (node->data->direction == 1){                                     //way there, approach to the center
             if (node->data->x < env_grid_length/2){
                 node->data->x = node->data->x + 1;
@@ -424,11 +424,11 @@ void lunes_user_control_handler(hash_node_t *node) {
         }
 
         if (node->data->x == node->data->baseX && node->data->y == node->data->baseY && node->data->direction == 2){
-            node->data->direction = 0;                                    //stationary until the bus-mule arrives and delivers the messages
+            node->data->direction = 0;                                    //stationary until the local mule arrives and delivers the messages
         }
 
         if (node->data->x == env_grid_length/2 && node->data->y == env_grid_length/2 && node->data->direction == 1){
-            node->data->direction = 2;                                    //the proxy-mule starts the way back
+            node->data->direction = 2;                                    //the radial mule starts the way back
             for (int i=0; i < node->data->messages_carried; i++){
                 node->data->messages[i]->delivered = (int)simclock;
                 total_hops++;
@@ -441,7 +441,7 @@ void lunes_user_control_handler(hash_node_t *node) {
         /*COURIERS*/
 
 
-    } else if (simclock > BUILDING_STEP && node->data->status == 5){         //mobility for mules that bring messages to the proxy  (proxy-mule)
+    } else if (simclock > BUILDING_STEP && node->data->status == 5){         //mobility for mules that bring messages to the proxy  (radial mule)
 
         //RANDOM WAYPOINT
         if (node->data->x == node->data->baseX && node->data->y == node->data->baseY &&  RND_Interval(S, 0, 1000) < 10){
@@ -467,8 +467,8 @@ void lunes_user_control_handler(hash_node_t *node) {
                 for (int i =0; i < node->data->messages_carried; i++){
                     node->data->messages[i]->delivered = (int)simclock;
                     node->data->messages[i]->state = 'C';
-                    node->data->messages[i]->toBusMule = -1;
-                    node->data->messages[i]->toProxyMule = -1;
+                    node->data->messages[i]->toLocalMule = -1;
+                    node->data->messages[i]->toRadialMule = -1;
                     total_hops++;
                 }
             } else {
@@ -482,10 +482,10 @@ void lunes_user_control_handler(hash_node_t *node) {
                                 receiver->data->messages[index] = node->data->messages[0];
                                 receiver->data->messages_carried++;
                                 if (h < env_data_mules){
-                                    node->data->messages[i]->toBusMule = (int)simclock;
+                                    node->data->messages[i]->toLocalMule = (int)simclock;
                                 } else {
-                                     node->data->messages[i]->toBusMule = -1;                           
-                                     node->data->messages[i]->toProxyMule = (int)simclock; 
+                                     node->data->messages[i]->toLocalMule = -1;                           
+                                     node->data->messages[i]->toRadialMule = (int)simclock; 
                                 }
                             }
                             node->data->messages_carried --;
@@ -523,15 +523,15 @@ void lunes_user_discovery_event_handler(hash_node_t *node, int forwarder, Msg *m
         if (mule->data->status == 4){                                       // it's the proxy  
             node->data->messages[0]->delivered = (int)simclock;
             node->data->messages[0]->state = 'I';
-            node->data->messages[0]->toBusMule = -1;
-            node->data->messages[0]->toProxyMule = -1;
-        } else if (mule->data->status == 2){                                // it's a busMule
-            node->data->messages[0]->toBusMule = (int)simclock;
+            node->data->messages[0]->toLocalMule = -1;
+            node->data->messages[0]->toRadialMule = -1;
+        } else if (mule->data->status == 2){                                // it's a LocalMule
+            node->data->messages[0]->toLocalMule = (int)simclock;
         } else if (mule->data->status == 5){
             //do nothing
-        } else {                                                            // it's a proxyMule
-            node->data->messages[0]->toProxyMule = (int)simclock;           
-            node->data->messages[0]->toBusMule = -1;
+        } else {                                                            // it's a RadialMule
+            node->data->messages[0]->toRadialMule = (int)simclock;           
+            node->data->messages[0]->toLocalMule = -1;
         }                                                                    
         if (mule->data->status != 4){
             int index = mule->data->messages_carried;

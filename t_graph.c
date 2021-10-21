@@ -583,28 +583,28 @@ int main(int argc, char *argv[]) {
                 fprintf(stdout, "%d out of %d messages come from border nodes. For these messages the average delay is %.3f, against %.3f of the non-border nodes\n", border_nodes_messages, messages_counter, border_average_delay, not_border_average_delay);
                 fprintf(stdout, "Average number of hops = %lf ", (double) total_hops/deliveredMessages);
 
-                int total_delay1=0, total_delay2=0, total_delay3 = 0, proxyMuleMessages=0; //, busMuleMessages=0
+                int total_delay1=0, total_delay2=0, total_delay3 = 0, proxyMuleMessages=0; //, LocalMuleMessages=0
                 for (int i =0; i<messages_counter; i++){
                     if (messages[i].delivered > 0){
-                        if (messages[i].toBusMule >= 0){
-                            total_delay1 += (messages[i].toBusMule - messages[i].emitted);
+                        if (messages[i].toLocalMule >= 0){
+                            total_delay1 += (messages[i].toLocalMule - messages[i].emitted);
                         }
-                        if (messages[i].toProxyMule >= 0 ){
-                            if (messages[i].toBusMule >= 0){
-                                total_delay2 += (messages[i].toProxyMule - messages[i].toBusMule);
+                        if (messages[i].toRadialMule >= 0 ){
+                            if (messages[i].toLocalMule >= 0){
+                                total_delay2 += (messages[i].toRadialMule - messages[i].toLocalMule);
                             } else {
-                                total_delay2 += (messages[i].toProxyMule - messages[i].emitted);
+                                total_delay2 += (messages[i].toRadialMule - messages[i].emitted);
                             }
                         }
-                        if (messages[i].toBusMule != -1 && messages[i].toProxyMule != -1){
+                        if (messages[i].toLocalMule != -1 && messages[i].toRadialMule != -1){
                             proxyMuleMessages++;
                         }
 
-                        if (messages[i].toProxyMule != -1){
-                            total_delay3 += (messages[i].delivered - messages[i].toProxyMule);
+                        if (messages[i].toRadialMule != -1){
+                            total_delay3 += (messages[i].delivered - messages[i].toRadialMule);
                         } else {
-                            if (messages[i].toBusMule != -1){
-                                total_delay3 += (messages[i].delivered - messages[i].toBusMule);
+                            if (messages[i].toLocalMule != -1){
+                                total_delay3 += (messages[i].delivered - messages[i].toLocalMule);
                             } else {
                                 total_delay3 += (messages[i].delivered - messages[i].emitted);
                             }
@@ -612,7 +612,7 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
-                fprintf(stdout, "On average delay for not immediate messages (%d out of %d messages) is composed of %lf as a bus-mule delay, %lf as a proxy-mule delay, %lf as delay3 \n", notImmidiateMessages ,messages_counter, (double)total_delay1/notImmidiateMessages, (double)total_delay2/notImmidiateMessages, (double)total_delay3/notImmidiateMessages );
+                fprintf(stdout, "On average delay for not immediate messages (%d out of %d messages) is composed of %lf as a local mule delay, %lf as a radial mule delay, %lf as delay3 \n", notImmidiateMessages ,messages_counter, (double)total_delay1/notImmidiateMessages, (double)total_delay2/notImmidiateMessages, (double)total_delay3/notImmidiateMessages );
 
 
                 //coverage region by regions for the heatmap

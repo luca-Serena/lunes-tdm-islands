@@ -39,8 +39,8 @@ typedef struct data_message {
 	int emitted;
 	int originX;
 	int originY;
-	int toBusMule;
-	int toProxyMule;
+	int toLocalMule;
+	int toRadialMule;
 	int delivered;
 	char state;           //N --> not delivered      I --> Immediately           P  --> Proxy-mule           B  --> Bus-mule
 } data_message;
