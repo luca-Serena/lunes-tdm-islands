@@ -23,9 +23,9 @@ For example to run a simple simulation execute `./run -n 10000`.
 Some important paramters the users con edit to configure the simulation are located in the file `run`
 
 - END_CLOCK 			 	number of discrete time-steps of the simulation
-export DATA_MULES 			number of both local mule and radial mule in the simulation. It is suggested to put a squared number for this parameter
-export GRID_LENGTH			dimension (in terms of cells) of a side of a grid
-export COMMUNICATION_DISTANCE		distance (in terms of cells) within which wireless communication is ensured
-export MULE_RADIUS			to set the width of the zigzags in the path of local mules
-export COURIERS				number of couriers
-export ISLAND_SIZE			dimension (in terms of cells) of the islands in the grid
+-  DATA_MULES 				number of both local mule and radial mule in the simulation. It is suggested to put a squared number for this parameter
+- GRID_LENGTH				dimension (in terms of cells) of a side of a grid
+- COMMUNICATION_DISTANCE		distance (in terms of cells) within which wireless communication is ensured
+- MULE_RADIUS				to set the width of the zigzags in the path of local mules
+- COURIERS				number of couriers
+- ISLAND_SIZE				dimension (in terms of cells) of the islands in the grid
