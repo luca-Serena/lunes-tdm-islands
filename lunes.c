@@ -62,6 +62,7 @@ extern int            env_mobility_type;
 extern float          env_end_clock;
 extern int            env_mule_radius;              /* Number of cells a mule move up and down during its path*/
 extern int            env_island_size;              /* Dimension of a side of a squared island*/
+extern int            env_couriers;                 /* Number of couriers */
 
 
 extern data_message *  messages;                //array with all the originated messages
@@ -71,8 +72,7 @@ extern int total_hops;
 int transmits = 8;                              // probability for a node to send a message
 int isHomogeneous = 1;                          // distribution of the population
 int counterReachable=0;
-int counterUnreachable=0;
-int counter = 1;
+int counterUnreachable=0; 
 
  
 
@@ -84,14 +84,14 @@ float distance(float diff_x, float diff_y) {
 
 void find_close_nodes (hash_node_t *thisNode){ //Find the nodes that during an epoch are potentially contactable during an epoch
     hash_node_t *node;
-    for (int h = 0; h < stable->size; h++) { //considering only the client nodes
-        for (node = stable->bucket[h]; node; node = node->next) {
+    for (int h = 2* env_data_mules + 1; h < 10000; h++){
+            node = hash_lookup(table, h);
             if ((node->data->x / env_island_size) == (thisNode->data->x / env_island_size) && (node->data->y / env_island_size) == (thisNode->data->y / env_island_size)
-                && thisNode->data->key != node->data->key && thisNode->data->num_neighbors < 300 && node->data->key > 2 * env_data_mules){
+                && thisNode->data->key != node->data->key && thisNode->data->num_neighbors < 300 && node->data->key > 2 * env_data_mules + env_couriers){
+
                 thisNode->data->neighbors[thisNode->data->num_neighbors] = node->data->key;
                 thisNode->data->num_neighbors++;
             }
-        }
     }
 }
 
@@ -105,7 +105,6 @@ void lunes_send_discovery_to_neighbors (hash_node_t *node, int muleId){
     // The message is forwarded to ALL neighbors of this node
     // NOTE: in case of probabilistic broadcast dissemination this function is called
     //       only if the probabilities evaluation was positive
-    
     while (neighs < node->data->num_neighbors ) {
         sender   = hash_lookup(stable, node->data->key);              // This node
         receiver = hash_lookup(table, node->data->neighbors[neighs]); // The neighbor
@@ -126,8 +125,9 @@ void lunes_user_control_handler(hash_node_t *node) {
     hash_node_t * proxy = hash_lookup(table, env_data_mules*2);
 
 
+
     //*************************************************** INITIAL SETUP***********************************************************************************************//
-    if (simclock == BUILDING_STEP){                     //positioning the nodes in the graph
+    if (simclock == BUILDING_STEP) {                     //positioning the nodes in the graph
         node->data->messages_carried = 0;
         if (node->data->key < env_data_mules){          //BUS-MULES
             node->data->Xspace = node->data->key / per_row;
@@ -149,13 +149,18 @@ void lunes_user_control_handler(hash_node_t *node) {
             node->data->x = bus_mule->data->baseX;
             node->data->y = bus_mule->data->baseY;
 
-        } else if (node->data->key == 2 * env_data_mules){      //proxy
+        } else if (node->data->key == 2 * env_data_mules){                          //proxy
             node->data->status = 4;
             node->data->x = env_grid_length/2;
             node->data->y = env_grid_length/2;
 
-        } else {                                               //normal nodes
 
+        } else if (node->data->key < 2 * env_data_mules + 1 + env_couriers){        //couriers
+            node->data->status = 5;
+            node->data->x = RND_Interval(S, 0, env_grid_length);
+            node->data->y = RND_Interval(S, 0, env_grid_length);
+        
+        } else {                                                                    //client nodes
             if (isHomogeneous == 1){
                 node->data->x = RND_Interval(S, 0, env_grid_length);
                 node->data->y = RND_Interval(S, 0, env_grid_length);
@@ -173,21 +178,22 @@ void lunes_user_control_handler(hash_node_t *node) {
                     node->data->y =  env_grid_length / 2 - (env_grid_length/2 - rndY);
                 }                
             }
-            if (node->data->x < 666 && node->data->x > 333 && node->data->y < 666 && node->data->y > 333){
-                counter++;
-            }
-            find_close_nodes(node);
             node->data->status = 0;
-            node->data->reachable=0;
+            node->data->reachable = 0;
         }
+    }
+
+    if (simclock == BUILDING_STEP +1 && node->data->status == 0 ){
+        find_close_nodes(node);
     }
 
 
 //********************************************************FIXED NODES MANAGEMENT **************************************************************************
 
     //chance for a node to activate (have data to be transmitted to the mule)
-    if (simclock > BUILDING_STEP &&  node->data->status == 0 && RND_Interval(S, 0, 10000) < transmits && simclock < (env_end_clock - 10000)){  
+    if (simclock > BUILDING_STEP +1 &&  node->data->status == 0 && RND_Interval(S, 0, 10000) < transmits && simclock < (env_end_clock - 10000)){  
         node->data->status = 1;
+
         if (node->data->reachable == 0){   //se non è già stato constatato che il nodo può contattare un mulo
             node->data->reachable = -1;
         }
@@ -200,24 +206,24 @@ void lunes_user_control_handler(hash_node_t *node) {
   
  //send message to the proxy
 
-    if (simclock > BUILDING_STEP && node->data->status == 1){
-        if (distance( abs(node->data->x - proxy->data->x), abs(node->data->y - proxy->data->y)) <= env_commmunication_distance){
-            node->data->messages[0]->delivered = (int)simclock;
-            node->data->messages[0]->state = 'I';
-            node->data->messages[0]->toBusMule = -1;
-            node->data->messages[0]->toProxyMule = -1;
-            node->data->status = 0;
-            total_hops++;
+    if (simclock > BUILDING_STEP && node->data->status <= 1){    
+        if (distance( abs(node->data->x - proxy->data->x), abs(node->data->y - proxy->data->y)) <= env_commmunication_distance){   //check if proxy is reachable
+            lunes_send_discovery_to_neighbors (node, 2 * env_data_mules);           //the node is reachable: communication of reachability to other nodes in the island
             node->data->reachable = 1;
-            lunes_send_discovery_to_neighbors (node, 2 * env_data_mules);
-
-        } else { //try to contact a mule
-            for (h=2 * env_data_mules; h >= 0; h--){
+            if (node->data->status == 1){                                           //deliver messages if any
+                node->data->messages[0]->delivered = (int)simclock;
+                node->data->messages[0]->state = 'I';
+                node->data->messages[0]->toBusMule = -1;
+                node->data->messages[0]->toProxyMule = -1;
+                node->data->status = 0;
+                total_hops++;
+            }
+        } else {   //try to contact a mule
+            for (h= 2 * env_data_mules-1; h >=0; h--){
                 receiver = hash_lookup(table, h);
                 if (distance( abs(node->data->x - receiver->data->x), abs(node->data->y - receiver->data->y)) <= env_commmunication_distance){
-                    node->data->reachable = 1;
                     lunes_send_discovery_to_neighbors (node, h);
-                    if (receiver->data->messages_carried < 5000){
+                    if (receiver->data->messages_carried < 5000 && node->data->status == 1){   //deliver messages if any (and if the mule has enough space)
                         node->data->status = 0;
                         total_hops++;
                         int index = receiver->data->messages_carried;
@@ -229,9 +235,25 @@ void lunes_user_control_handler(hash_node_t *node) {
                              node->data->messages[0]->toBusMule = -1;                           
                              node->data->messages[0]->toProxyMule = (int)simclock; 
                         }
-                    }
+                    } 
                     break;
                 }
+            }
+            for (h= 2 * env_data_mules+1; h < 2 * env_data_mules + 1 + env_couriers; h++){
+                receiver = hash_lookup(table, h);
+                lunes_send_discovery_to_neighbors (node, h);
+                if (distance( abs(node->data->x - receiver->data->x), abs(node->data->y - receiver->data->y)) <= env_commmunication_distance){
+                    if (receiver->data->messages_carried < 5000 && node->data->status == 1){   //deliver messages if any (and if the mule has enough space)
+                        node->data->status = 0;
+                        node->data->reachable = 1;
+                        total_hops++;
+                        int index = receiver->data->messages_carried;
+                        receiver->data->messages[index] = node->data->messages[0];
+                        receiver->data->messages_carried++;
+                    } 
+                    
+                }
+                break;
             }
         }     
     }
@@ -377,7 +399,6 @@ void lunes_user_control_handler(hash_node_t *node) {
 //*********************************************PROXY_MULE****************************************************************************************************************
 
     } else if (simclock > BUILDING_STEP && node->data->status == 3){         //mobility for mules that bring messages to the proxy  (proxy-mule)
-
         if (node->data->direction == 1){                                     //way there, approach to the center
             if (node->data->x < env_grid_length/2){
                 node->data->x = node->data->x + 1;
@@ -410,11 +431,72 @@ void lunes_user_control_handler(hash_node_t *node) {
             node->data->direction = 2;                                    //the proxy-mule starts the way back
             for (int i=0; i < node->data->messages_carried; i++){
                 node->data->messages[i]->delivered = (int)simclock;
+                total_hops++;
                 node->data->messages[i]->state = 'P';
             }  
             node->data->messages_carried = 0;
         }
+
+
+        /*COURIERS*/
+
+
+    } else if (simclock > BUILDING_STEP && node->data->status == 5){         //mobility for mules that bring messages to the proxy  (proxy-mule)
+
+        //RANDOM WAYPOINT
+        if (node->data->x == node->data->baseX && node->data->y == node->data->baseY &&  RND_Interval(S, 0, 1000) < 10){
+            node->data->baseX = RND_Interval(S, 0, env_grid_length);
+            node->data->baseY = RND_Interval(S, 0, env_grid_length);  
+        } 
+        
+        if (node->data->x != node->data->baseX || node->data->y == node->data->baseY){
+            if (node->data->x < node->data->baseX){
+                node->data->x++;
+            } else if (node->data->x > node->data->baseX){
+                node->data->x--;
+            }
+            if (node->data->y < node->data->baseY){
+                node->data->y++;
+            } else if (node->data->y > node->data->baseY){
+                node->data->y--;
+            }
+        }
+
+        if (node->data->messages_carried > 0){
+            if (distance( abs(node->data->x - proxy->data->x), abs(node->data->y - proxy->data->y)) <= env_commmunication_distance){
+                for (int i =0; i < node->data->messages_carried; i++){
+                    node->data->messages[i]->delivered = (int)simclock;
+                    node->data->messages[i]->state = 'C';
+                    node->data->messages[i]->toBusMule = -1;
+                    node->data->messages[i]->toProxyMule = -1;
+                    total_hops++;
+                }
+            } else {
+                for (h=2*env_data_mules; h >= 0; h--){
+                    receiver = hash_lookup(table, h);
+                    if (distance( abs(node->data->x - receiver->data->x), abs(node->data->y - receiver->data->y)) <= env_commmunication_distance){
+                        total_hops++;                  
+                        for (int i =0; i < node->data->messages_carried; i++){
+                            if (receiver->data->messages_carried < 5000){
+                                int index = receiver->data->messages_carried;
+                                receiver->data->messages[index] = node->data->messages[0];
+                                receiver->data->messages_carried++;
+                                if (h < env_data_mules){
+                                    node->data->messages[i]->toBusMule = (int)simclock;
+                                } else {
+                                     node->data->messages[i]->toBusMule = -1;                           
+                                     node->data->messages[i]->toProxyMule = (int)simclock; 
+                                }
+                            }
+                            node->data->messages_carried --;
+                        }
+                        break;
+                    }
+                }
+            }             
+        }
     }
+
 
         /*STATISTIC*/
 
@@ -427,15 +509,17 @@ void lunes_user_control_handler(hash_node_t *node) {
     }
 
     else if (node->data->key == 1 && simclock == (env_end_clock - 49)){
-        fprintf(stdout, "reachable: %d unreachable: %d\n", counterReachable, counterUnreachable);
+        fprintf(stdout, "reachable: %d unreachable: %d \n", counterReachable,  counterUnreachable);
     }
 }
 
 
 void lunes_user_discovery_event_handler(hash_node_t *node, int forwarder, Msg *msg) {
     hash_node_t * mule = hash_lookup(stable, msg->discovery.discovery_static.muleId);
-    if (node->data->status == 1) {      //if the node has messages to send
-        node->data->reachable = 1;
+    node->data->reachable = 1;
+    if (node->data->status == 1 && mule->data->messages_carried < 5000) {      //if the node has messages to send
+        node->data->status = 0;
+        total_hops++;
         if (mule->data->status == 4){                                       // it's the proxy  
             node->data->messages[0]->delivered = (int)simclock;
             node->data->messages[0]->state = 'I';
@@ -443,14 +527,13 @@ void lunes_user_discovery_event_handler(hash_node_t *node, int forwarder, Msg *m
             node->data->messages[0]->toProxyMule = -1;
         } else if (mule->data->status == 2){                                // it's a busMule
             node->data->messages[0]->toBusMule = (int)simclock;
+        } else if (mule->data->status == 5){
+            //do nothing
         } else {                                                            // it's a proxyMule
             node->data->messages[0]->toProxyMule = (int)simclock;           
             node->data->messages[0]->toBusMule = -1;
         }                                                                    
-        total_hops++;
-        
-        node->data->messages_carried = 0;
-        if (mule->data->messages_carried < 5000 && mule->data->status != 4){
+        if (mule->data->status != 4){
             int index = mule->data->messages_carried;
             mule->data->messages[index] = node->data->messages[0];
             mule->data->messages_carried++;
