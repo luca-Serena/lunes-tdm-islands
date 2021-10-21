@@ -65,7 +65,8 @@ int            env_grid_length;               /* Length of sides of the square g
 int            env_commmunication_distance;   /* Distance within which it is possible to communicate*/
 int            env_mobility_type;
 int            env_mule_radius;               /* Number of cells a mule move up and down during its path*/
-int            env_island_size;              /* Dimension of a side of a squared island*/
+int            env_island_size;               /* Dimension of a side of a squared island*/
+int            env_couriers;                  /* Number of couriers */
 
 /* ************************************************************************ */
 /*                      Hash Tables                                         */
@@ -327,7 +328,7 @@ int main(int argc, char *argv[]) {
     NSIMULATE = atoi(argv[2]);  // Number of SEs to simulate
     TESTNAME  = argv[3];        // Output directory for simulation traces
 
-        messages = (data_message *) malloc(sizeof(data_message) * (NSIMULATE * 15));
+        messages = (data_message *) malloc(sizeof(data_message) * (300000));
 
 
 
@@ -544,6 +545,7 @@ int main(int argc, char *argv[]) {
                             notImmidiateMessages++;
                         }
                     }
+
                     if (messages[i].originX < 250 || messages[i].originY < 250 || messages[i].originX > 750 || messages[i].originY > 750){
                         if (messages[i].delivered > 0){
                             border_nodes_messages++;
@@ -562,16 +564,13 @@ int main(int argc, char *argv[]) {
                 }
 
                 average_delay = (double)total_delay/deliveredMessages;
-                average_delayNI = (double)total_delay/notImmidiateMessages;     //average delay for not immediate messages
+                average_delayNI = (double)total_delay/notImmidiateMessages;                                            //average delay for not immediate messages
                 border_average_delay = (double)border_nodes_delay/border_nodes_messages;
                 not_border_average_delay = (double)(total_delay - border_nodes_delay)/(deliveredMessages - border_nodes_messages);
                 double temp_variance =0, temp_varianceNI=0;
-                for (int i = 0; i < deliveredMessages; i++){   //calculate variance
+                for (int i = 0; i < deliveredMessages; i++){                                                            //calculate variance
                     if (messages[i].delivered > 0){
                         temp_variance += ((messages[i].delivered - messages[i].emitted) * 2 - average_delay * 2) * ((messages[i].delivered - messages[i].emitted) * 2 - average_delay * 2);
-                        //if (messages[i].originX < 250 || messages[i].originY < 250 || messages[i].originX > 750 || messages[i].originY > 750){
-                        //    temp_border_variance += ((messages[i].delivered - messages[i].emitted) - average_delay) * ((messages[i].delivered - messages[i].emitted) - average_delay);
-                        //}
                         if (messages[i].state!= 'I'){
                             temp_varianceNI += ((messages[i].delivered - messages[i].emitted) * 2 - average_delay * 2) * ((messages[i].delivered - messages[i].emitted) * 2 - average_delay * 2);
                         }
@@ -579,14 +578,12 @@ int main(int argc, char *argv[]) {
                 }
                 variance_delay = temp_variance / deliveredMessages;
                 variance_delayNI = temp_varianceNI/notImmidiateMessages;  //variance delay for not immediate messages
-                //variance_border_nodes = temp_border_variance / border_nodes_messages;
-                fprintf(stdout, "%d out of %d messages delivered\n", deliveredMessages, messages_counter);
+                fprintf(stdout, "%d out of %d messages delivered. \n", deliveredMessages, messages_counter);
                 fprintf(stdout, "Average delay: %.3f with variance %.2f. Messages which employ mules have an average delay of %.3f with variance %.3f \n", average_delay, variance_delay, average_delayNI, variance_delayNI);
                 fprintf(stdout, "%d out of %d messages come from border nodes. For these messages the average delay is %.3f, against %.3f of the non-border nodes\n", border_nodes_messages, messages_counter, border_average_delay, not_border_average_delay);
                 fprintf(stdout, "Average number of hops = %lf ", (double) total_hops/deliveredMessages);
 
                 int total_delay1=0, total_delay2=0, total_delay3 = 0, proxyMuleMessages=0; //, busMuleMessages=0
-                //double average_delay1=0;
                 for (int i =0; i<messages_counter; i++){
                     if (messages[i].delivered > 0){
                         if (messages[i].toBusMule >= 0){
@@ -614,11 +611,11 @@ int main(int argc, char *argv[]) {
                         }
                     }
                 }
-                //average_delay1 = (double)total_delay1/busMuleMessages;      //average delay to reach a bus-mule
 
-                //fprintf(stdout, "The average delay to reach a bus-mule (%d out of %d messages) is %lf\n", busMuleMessages, messages_counter, average_delay1);
                 fprintf(stdout, "On average delay for not immediate messages (%d out of %d messages) is composed of %lf as a bus-mule delay, %lf as a proxy-mule delay, %lf as delay3 \n", notImmidiateMessages ,messages_counter, (double)total_delay1/notImmidiateMessages, (double)total_delay2/notImmidiateMessages, (double)total_delay3/notImmidiateMessages );
 
+
+                //coverage region by regions for the heatmap
                 fprintf(stdout, "\n [");
                 for (int i = 0; i < detail;  i++){
                     fprintf(stdout, "[");

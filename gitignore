@@ -1,0 +1,12 @@
+*.finished
+data*
+graphgen
+INST*
+rand
+*.o
+res*
+sima
+temp*
+t_graph
+test*
+USAGE.TXT

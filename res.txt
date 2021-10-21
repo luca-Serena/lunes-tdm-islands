@@ -1,0 +1,11 @@
+16 mules, omogeneo
+475620 messages received 155561336, average delay = 327.070636 
+
+9 mules, omogeneto
+274742 messages received 168337807, average delay = 612.712316 
+
+9 mules, non omogeneo sq
+279083 messages received 169025372, average delay = 605.645532 
+
+9 mules, non omogeneo cb
+279282 messages received 168856198, average delay = 604.608238 

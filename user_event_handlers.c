@@ -66,6 +66,7 @@ extern int 			  env_data_mules;				/* number of data mules*/
 extern int 			  env_mobility_type; 			/* Mobility algorithm to follow */
 extern int            env_mule_radius;              /* Number of cells a mule move up and down during its path*/
 extern int            env_island_size;              /* Dimension of a side of a squared island*/
+extern int            env_couriers;                 /* Number of couriers */
 
 
 
@@ -156,9 +157,8 @@ void execute_discovery (double ts, hash_node_t *src, hash_node_t *dest, int mule
         exit(-1);
     }
 
-    //if (ttl > 0){
-        GAIA_Send(src->data->key, dest->data->key, ts, (void *)&msg, message_size);
-    //}
+    GAIA_Send(src->data->key, dest->data->key, ts, (void *)&msg, message_size);
+    
     // Real send
 
 }
@@ -314,6 +314,12 @@ void user_environment_handler() {
     fprintf(stdout, "LUNES____[%10d]: ISLAND_SIZE -> %d\n", local_pid, env_island_size);
     if (env_island_size <= 0) {
         fprintf(stdout, "LUNES____[%10d]: ISLAND_SIZE <= 0, error \n", local_pid);
+    }
+
+    env_couriers =atof(check_and_getenv("COURIERS"));
+    fprintf(stdout, "LUNES____[%10d]: COURIERS -> %d\n", local_pid, env_couriers);
+    if (env_couriers <= 0) {
+        fprintf(stdout, "LUNES____[%10d]: COURIERS <= 0, error \n", local_pid);
     }
 } 
 
