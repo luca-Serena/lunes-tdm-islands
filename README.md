@@ -1,4 +1,4 @@
-# LUNES-Blockchain
+# LUNES
 
 ### Large Unstructured NEtwork Simulator (LUNES) for TruDaMule protocol
 This _LUNES_ implementation is used to simulate TruDaMule
