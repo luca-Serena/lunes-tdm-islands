@@ -12,6 +12,8 @@ a correct compilation and execution:
 
 ## Compilation
 
+LUNES is provided as source code and therefore it is necessary to compile it. For this reason is provided a Makefile. The compilation can be done in both 32 and 64 bits architectures. The only supported operating system is GNU/Linux. Almost all the "modern distributions" should work but take care that all the development process is done using Ubuntu.
+
 Run `make` inside this folder to compile the binary
 
 ## Usage
@@ -40,29 +42,13 @@ Some important paramters the users con edit to configure the simulation are loca
 - ISLAND_SIZE				dimension (in terms of cells) of the islands in the grid
 
 
-##License
+## License
 
-This software can be used ONLY for EDUCATIONAL or RESEARCH purposes. In 
-both cases the results (i.e. reports or research papers) should clearly 
-report the credits to this software. Any commercial use is expressly 
-forbidden without prior written consent from the authors.
+This software can be used ONLY for EDUCATIONAL or RESEARCH purposes. In both cases the results (i.e. reports or research papers) should clearly report the credits to this software. Any commercial use is expressly forbidden without prior written consent from the authors.
 
-You may NOT modify, adapt, translate, reverse engineer, decompile, 
-disassemble this software to create derivative works based on this 
-software package. The software may not be transferred or commercialized 
-in any way to anyone without the prior written consent of the authors.
+You may NOT modify, adapt, translate, reverse engineer, decompile, disassemble this software to create derivative works based on this software package. The software may not be transferred or commercialized in any way to anyone without the prior written consent of the authors.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Contacts
 
