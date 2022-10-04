@@ -1,6 +1,6 @@
 # LUNES
 
-### Large Unstructured NEtwork Simulator (LUNES) for TruDaMule protocol
+### Large Unstructured NEtwork Simulator (LUNES) for InDaMule protocol
 This _LUNES_ implementation is used to simulate TruDaMule
 
 ## Compilation
